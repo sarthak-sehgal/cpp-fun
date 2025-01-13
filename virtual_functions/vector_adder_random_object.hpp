@@ -1,25 +1,54 @@
 #include "profiler.hpp"
 
-#include <array>
 #include <iostream>
 #include <memory>
 #include <random>
 #include <vector>
 
-template <typename PointerType, typename ObjectType>
-struct VectorAdder
+template <typename PointerType>
+std::shared_ptr<PointerType> createRandomObject(std::size_t)
+{
+    return nullptr;
+}
+
+template <typename PointerType, typename T, typename... Rest>
+std::shared_ptr<PointerType> createRandomObject(std::size_t index) {
+    if (index == 0) {
+        return std::shared_ptr<PointerType>(new T());
+    } else {
+        return createRandomObject<PointerType, Rest...>(index-1);
+    }
+}
+
+template <typename PointerType, typename... ObjectType>
+std::shared_ptr<PointerType> createRandomObject()
+{
+    #ifdef PATTERN
+        static std::size_t i = 0;
+        std::size_t random_index = (i++) % sizeof...(ObjectType);
+    #else
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> dis(0, sizeof...(ObjectType) - 1);
+        int random_index = dis(gen);
+    #endif
+
+    return createRandomObject<PointerType, ObjectType...>(random_index);
+}
+
+template <typename PointerType, typename... ObjectType>
+struct VectorAdderRandomObject
 {
     auto run()
     {
         // allocate new vector objects in each test run
         // to avoid cache effects
         std::array<PointerType*, 1000> vectorArr;
-        ObjectType result;
         std::size_t vectorIdx = 0;
 
         for (auto j = 0u; j < 1000; ++j)
         {
-            vectors[vectorIdx++] = std::shared_ptr<PointerType>(new ObjectType());
+            vectors[vectorIdx++] = createRandomObject<PointerType, ObjectType...>();
             auto* v = vectors[vectorIdx-1].get();
             v->setX(dist(rng));
             v->setY(dist(rng));
@@ -39,11 +68,7 @@ struct VectorAdder
         }
         profiler.lap();
 
-        result.setX(x);
-        result.setY(y);
-        result.setZ(z);
-
-        std::cout << "Result: " << result.getX() << ' ' << result.getY() << ' ' << result.getZ() << '\n';
+        std::cout << "Result: " << x << ' ' << y << ' ' << z << '\n';
 
         return profiler.get();
     }

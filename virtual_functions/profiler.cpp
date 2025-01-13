@@ -4,10 +4,14 @@
 #include <iostream>
 
 Profiler::Profiler()
-: file{std::ofstream("output.txt", std::ios::out)}
+: file{std::ofstream("output.txt", std::ios::app)}
 {
     if (not file)
         throw "Could not open file";
+    
+    timespec res;
+    clock_getres(CLOCK_MONOTONIC, &res);
+    std::cout << "Clock resolution: " << res.tv_sec << "s " << res.tv_nsec << "ns\n";
 }
 
 Profiler::~Profiler()
