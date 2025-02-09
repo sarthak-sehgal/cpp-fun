@@ -1,6 +1,9 @@
+#pragma once
+
 #include <cassert>
 #include <cstddef>
 #include <mutex>
+#include <stdlib.h>
 #include <vector>
 
 template <typename T>
@@ -21,7 +24,7 @@ public:
         auto* nextTail = increment(tail);
         if (nextTail == head)
             return false;
-        
+
         std::construct_at(reinterpret_cast<T*>(tail), item);
         tail = nextTail;
         return true;
@@ -38,7 +41,7 @@ public:
         return true;
     }
 
-    ~MutexBuffer_V2()
+    ~MutexBuffer_V3()
     {
         free(buffer);
     }

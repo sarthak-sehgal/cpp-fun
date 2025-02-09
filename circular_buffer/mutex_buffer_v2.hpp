@@ -1,6 +1,7 @@
+#pragma once
+
 #include <mutex>
 #include <vector>
-
 
 template <typename T>
 class MutexBuffer_V2 {
@@ -37,8 +38,8 @@ public:
     }
 
 private:
-    std::vector<T> buffer;
-    std::mutex mutex;
     alignas(CL_SIZE) std::size_t head = 0;
     alignas(CL_SIZE) std::size_t tail = 0;
+    std::vector<T> buffer;
+    std::mutex mutex;
 };

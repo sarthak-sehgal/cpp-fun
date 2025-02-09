@@ -1,15 +1,10 @@
+#pragma once
+
 #include <mutex>
 #include <vector>
 
-
 template <typename T>
 class MutexBuffer_V1 {
-    #if defined(__cpp_lib_hardware_interference_size)
-    static constexpr std::size_t CL_SIZE = std::hardware_constructive_interference_size;
-    #else
-    // fallback value
-    static constexpr std::size_t CL_SIZE = 64;
-    #endif
 public:
     MutexBuffer_V1(size_t capacity) : buffer(capacity)
     {
@@ -38,8 +33,8 @@ public:
     }
 
 private:
-    std::vector<T> buffer;
-    std::mutex mutex;
     std::size_t head = 0;
     std::size_t tail = 0;
+    std::vector<T> buffer;
+    std::mutex mutex;
 };
