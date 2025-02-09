@@ -1,10 +1,17 @@
 #include <mutex>
 #include <vector>
 
+
 template <typename T>
-class MutexBuffer {
+class MutexBuffer_V1 {
+    #if defined(__cpp_lib_hardware_interference_size)
+    static constexpr std::size_t CL_SIZE = std::hardware_constructive_interference_size;
+    #else
+    // fallback value
+    static constexpr std::size_t CL_SIZE = 64;
+    #endif
 public:
-    MutexBuffer(size_t capacity) : buffer(capacity)
+    MutexBuffer_V1(size_t capacity) : buffer(capacity)
     {
         buffer.resize(capacity);
     }
