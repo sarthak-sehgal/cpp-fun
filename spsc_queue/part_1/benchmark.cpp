@@ -1,6 +1,8 @@
 #include "mutex_buffer_v1.hpp"
-#include "mutex_buffer_v2.hpp"
-#include "mutex_buffer_v3.hpp"
+#include "mutex_buffer_v1_1.hpp"
+#include "atomic_buffer_v1.hpp"
+
+#include <boost/lockfree/spsc_queue.hpp>
 
 #include <cassert>
 #include <nanobench.h>
@@ -32,7 +34,7 @@ void run(auto& buffer)
 
     threads[0] = std::jthread([&] {
         #ifdef __unix__
-        set_affinity(1);
+        set_affinity(26);
         #endif
         for (int i = 0; i < 1'000'000; ++i) {
             while (!buffer.push(i)) {
@@ -43,7 +45,7 @@ void run(auto& buffer)
 
     threads[1] = std::jthread([&] {
         #ifdef __unix__
-        set_affinity(2);
+        set_affinity(27);
         #endif
         auto consume = [i = 0](int item) mutable {
             assert(item == i++);
@@ -57,19 +59,24 @@ void run(auto& buffer)
 }
 
 int main() {
-    MutexBuffer_V1<int> mutex_buffer_v1(10'000);
-    MutexBuffer_V2<int> mutex_buffer_v2(10'000);
-    // MutexBuffer_V3<int> mutex_buffer_v3(10'000);
+    MutexBuffer_V1<int> mutex_buffer_v1(1000);
+    MutexBuffer_V1_1<int> mutex_buffer_v1_1(1000);
+    AtomicBuffer_V1<int> atomic_buffer_v1(1000);
+    boost::lockfree::spsc_queue<int> boost_buffer(1000);
 
-    ankerl::nanobench::Bench().run("mutex_buffer_v1", [&mutex_buffer_v1] {
+    ankerl::nanobench::Bench().minEpochIterations(100).epochs(5).warmup(5).run("mutex_spsc_v1", [&mutex_buffer_v1] {
         run(mutex_buffer_v1);
     });
 
-    ankerl::nanobench::Bench().run("mutex_buffer_v2", [&mutex_buffer_v2] {
-        run(mutex_buffer_v2);
+    ankerl::nanobench::Bench().minEpochIterations(100).epochs(5).warmup(5).run("mutex_spsc_v1.1", [&mutex_buffer_v1_1] {
+        run(mutex_buffer_v1_1);
     });
 
-    // ankerl::nanobench::Bench().run("mutex_buffer_v3", [&mutex_buffer_v3] {
-    //     run(mutex_buffer_v3);
-    // });
+    ankerl::nanobench::Bench().minEpochIterations(100).epochs(5).warmup(5).run("atomic_spsc_v1", [&atomic_buffer_v1] {
+        run(atomic_buffer_v1);
+    });
+
+    ankerl::nanobench::Bench().minEpochIterations(100).epochs(5).warmup(5).run("boost_spsc", [&boost_buffer] {
+        run(boost_buffer);
+    });
 }

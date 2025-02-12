@@ -4,14 +4,10 @@
 #include <vector>
 
 template <typename T>
-class MutexBuffer_V2 {
-    #if defined(__cpp_lib_hardware_interference_size)
-    static constexpr std::size_t CL_SIZE = std::hardware_constructive_interference_size;
-    #else
-    static constexpr std::size_t CL_SIZE = 64;
-    #endif
+class MutexBuffer_V1 {
 public:
-    MutexBuffer_V2(size_t capacity) : buffer(capacity)
+    MutexBuffer_V1(size_t capacity)
+    : capacity{capacity}
     {
         buffer.resize(capacity);
     }
@@ -19,7 +15,7 @@ public:
     bool push(const T& item)
     {
         std::lock_guard<std::mutex> lock(mutex);
-        std::size_t next_tail = (tail + 1) % buffer.size();
+        std::size_t next_tail = (tail + 1) % capacity;
         if (next_tail == head)
             return false;
         buffer[tail] = item;
@@ -32,14 +28,16 @@ public:
         std::lock_guard<std::mutex> lock(mutex);
         if (head == tail)
             return false;
-        func(std::move(buffer[head]));
-        head = (head + 1) % buffer.size();
+        T elem = std::move(buffer[head]);
+        func(std::move(elem));
+        head = (head + 1) % capacity;
         return true;
     }
 
 private:
-    alignas(CL_SIZE) std::size_t head = 0;
-    alignas(CL_SIZE) std::size_t tail = 0;
+    std::size_t const capacity;
+    std::size_t head = 0;
+    std::size_t tail = 0;
     std::vector<T> buffer;
     std::mutex mutex;
 };
