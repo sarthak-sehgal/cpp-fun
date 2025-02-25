@@ -61,8 +61,8 @@ void run(auto& buffer)
 }
 
 int main() {
-    AtomicBuffer_V3<int> atomic_buffer_v1(1000);
-    AtomicBuffer_V3<int> atomic_buffer_v2(1000);
+    AtomicBuffer_V1<int> atomic_buffer_v1(1000);
+    AtomicBuffer_V2<int> atomic_buffer_v2(1000);
     AtomicBuffer_V3<int> atomic_buffer_v3(1000);
     AtomicBuffer_V4<int> atomic_buffer_v4(1000);
     rigtorp::SPSCQueue<int> rigtorp_queue(1000);
