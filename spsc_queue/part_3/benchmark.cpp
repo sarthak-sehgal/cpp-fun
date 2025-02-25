@@ -1,3 +1,5 @@
+#include "atomic_buffer_v1.hpp"
+#include "atomic_buffer_v2.hpp"
 #include "atomic_buffer_v3.hpp"
 #include "atomic_buffer_v4.hpp"
 #include "rigtorp_queue.hpp"
@@ -59,10 +61,20 @@ void run(auto& buffer)
 }
 
 int main() {
+    AtomicBuffer_V3<int> atomic_buffer_v1(1000);
+    AtomicBuffer_V3<int> atomic_buffer_v2(1000);
     AtomicBuffer_V3<int> atomic_buffer_v3(1000);
     AtomicBuffer_V4<int> atomic_buffer_v4(1000);
     rigtorp::SPSCQueue<int> rigtorp_queue(1000);
     boost::lockfree::spsc_queue<int> boost_buffer(1000);
+
+    ankerl::nanobench::Bench().minEpochIterations(200).epochs(5).warmup(5).run("atomic_spsc_v1", [&atomic_buffer_v1] {
+        run(atomic_buffer_v1);
+    });
+
+    ankerl::nanobench::Bench().minEpochIterations(200).epochs(5).warmup(5).run("atomic_spsc_v2", [&atomic_buffer_v2] {
+        run(atomic_buffer_v2);
+    });
 
     ankerl::nanobench::Bench().minEpochIterations(200).epochs(5).warmup(5).run("atomic_spsc_v3", [&atomic_buffer_v3] {
         run(atomic_buffer_v3);
